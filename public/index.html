@@ -7,12 +7,27 @@
 </head>
 
 <body>
-    <div id="msgview">
-        <ul id="messages"></ul>
-        <form id="sendbox" action="">
-            <input id="m" autocomplete="off" />
-            <button id="sendbtn">>></button>
-        </form>
+    <div class="container root">
+        <div class="row">
+
+            <div class="contacts-view col-sm-4 full-height">
+
+            </div>
+
+            <div class="msg-view col-sm-8 full-height">
+
+                <div id="messages"></div>
+
+                <form id="sendbox" action="">
+                    <div class="input-group mb-3">
+                        <input id="m" autocomplete="off" type="text" class="form-control">
+                        <div class="input-group-append">
+                            <button id="sendbtn" class="btn btn-outline-secondary" type="button">>></button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
     <script type="application/javascript" src="/bundle.js"></script>

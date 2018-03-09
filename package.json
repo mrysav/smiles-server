@@ -6,11 +6,11 @@
     "clean": "rm -rf dist/*",
     "app": "node dist/server/index.js",
     "build-ts": "tsc",
-    "build-bundle": "npx webpack dist/app/index.js --output dist/bundle.js",
+    "build-bundle": "npx webpack dist/app/index.js --module-bind 'css=style-loader!css-loader' --output dist/bundle.js",
     "watch-ts": "tsc --watch",
-    "watch-bundle": "npx webpack dist/app/index.js --watch --output dist/bundle.js",
-    "server": "npm run build-ts && npm run build-bundle && npm run app",
-    "watch-server": "concurrently 'npm run watch-ts' 'npm run watch-bundle' 'npm run app'"
+    "watch-bundle": "npx webpack dist/app/index.js --watch --module-bind 'css=style-loader!css-loader' --output dist/bundle.js",
+    "start": "npm run build-ts && npm run build-bundle && npm run app",
+    "watch": "concurrently 'npm run watch-ts' 'npm run watch-bundle' 'npm run app'"
   },
   "repository": {
     "type": "git",
@@ -19,9 +19,11 @@
   "author": "Mitchell Rysavy",
   "license": "MIT",
   "dependencies": {
+    "bootstrap": "^4.0.0",
     "concurrently": "^3.5.1",
     "express": "^4.16.2",
     "jquery": "^3.3.1",
+    "popper.js": "^1.12.9",
     "socket.io": "^2.0.4",
     "typescript": "^2.7.1"
   },
@@ -31,6 +33,8 @@
     "@types/node": "^8.9.1",
     "@types/socket.io": "^1.4.31",
     "@types/socket.io-client": "^1.4.32",
+    "css-loader": "^0.28.10",
+    "style-loader": "^0.20.2",
     "webpack": "^4.1.1",
     "webpack-cli": "^2.0.10"
   }
