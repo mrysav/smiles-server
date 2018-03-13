@@ -21,10 +21,10 @@ export class SmsMessage {
         }
     }
 
-    public static fromJSON(json): SmsMessage {
+    public static from(json): SmsMessage {
         return new SmsMessage(json.body, 
-            Contact.fromJSON(json.sender), 
-            Contact.fromJSON(json.receiver),
+            Contact.from(json.sender), 
+            Contact.from(json.receiver),
             new Date(json.date));
     }
 }

@@ -8,10 +8,6 @@
     border-radius: 5px;
 }
 
-.contacts-view {
-    background-color: #ebebeb;
-}
-
 .msg-view {
     display: flex;
     flex-direction: column;
@@ -36,6 +32,28 @@
 
 .self {
     background-color: lightskyblue;
+}
+
+#contacts-view {
+    background-color: #ebebeb;
+    padding: 0;
+}
+
+.contact {
+    background-color: #d1cfcf;
+    padding: 10px 20px;
+    font-weight: normal;
+    user-select: none;
+}
+
+.contact .number {
+    font-size: smaller;
+}
+
+.contact:hover {
+    background-color: #a1a1a1;
+    font-weight: lighter;
+    cursor: pointer;
 }
 
 #sendbox {

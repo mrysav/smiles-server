@@ -44,7 +44,7 @@ class App {
             console.log('user connected');
             socket.on('sms_send', function (msg:string, receiver:string) {
                 // wrap self message in an SmsMessage
-                let recv:Contact = Contact.fromJSON(receiver);
+                let recv:Contact = Contact.from(receiver);
                 let snt:SmsMessage = new SmsMessage(msg, me, recv, new Date());
                 socket.emit('sms_receive', snt);
 

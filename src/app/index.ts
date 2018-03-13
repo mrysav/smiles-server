@@ -9,6 +9,7 @@ import { Contact } from '../model/contact';
 const socket = io('/');
 
 const messages:Map<string, Array<SmsMessage>> = new Map();
+const contacts:Map<string, Contact> = new Map();
 let selectedContact:Contact = new Contact('Carls Burg', '567-456-3455');
 let me:Contact;
 
@@ -17,12 +18,12 @@ socket.on('connect', function() {
 });
 
 socket.on('auth_me', function(server_me) {
-    me = Contact.fromJSON(server_me);
+    me = Contact.from(server_me);
     console.log('received identity: ' + me.toString());
 });
 
 socket.on('sms_receive', function(msg) {
-    handle_message(SmsMessage.fromJSON(msg));
+    handle_message(SmsMessage.from(msg));
 });
 
 $('form').submit(function () {
@@ -57,27 +58,54 @@ function append_message(msg:SmsMessage) {
 function handle_message(msg:SmsMessage) {
     // console.log("received: " + msg.toString());
 
-    let numKey:string;
+    let contact:Contact;
 
     if (msg.receiver.number === me.number) {
-        numKey = msg.sender.number;
+        contact = msg.sender;
     } else if (msg.sender.number === me.number) {
-        numKey = msg.receiver.number;
+        contact = msg.receiver;
     } else {
         console.log('message does not appear to belong here: ' + msg.toString());
         return;
     }
 
-    if (!messages.has(numKey)) {
-        messages.set(numKey, new Array());
+    if (!messages.has(contact.number)) {
+        messages.set(contact.number, new Array());
     }
 
-    messages.get(numKey).push(msg);
-    messages.get(numKey).sort(function(a:SmsMessage,b:SmsMessage) {
+    if(!contacts.has(contact.number)) {
+        contacts.set(contact.number, Contact.from(contact));
+    }
+
+    messages.get(contact.number).push(msg);
+    messages.get(contact.number).sort(function(a:SmsMessage,b:SmsMessage) {
         return a.date.getTime() - b.date.getTime();
     });
 
-    if (selectedContact.number === numKey) {
+    if (selectedContact.number === contact.number) {
         append_message(msg);
     }
+
+    update_contacts();
+}
+
+function update_contacts() {
+    contacts.forEach(function (p) {
+        let contactsView = document.querySelector('#contacts-view');
+        let contactCard = contactsView.querySelector('.contact[data-number="' + p.number + '"]');
+        if (!contactCard) {
+            let newCard = document.createElement('div');
+            newCard.classList.add('contact');
+            newCard.innerHTML = p.name + '<br/><div class="number">' + p.number + '</div>';
+            newCard.dataset.number = p.number;
+            newCard.addEventListener('click', handleClickContact);
+            contactsView.appendChild(newCard);
+        }
+    });
+}
+
+function handleClickContact(e:MouseEvent) {
+    let contactCard = e.srcElement;
+    let number:string = contactCard.getAttribute('data-number');
+    selectedContact = contacts.get(number);
 }

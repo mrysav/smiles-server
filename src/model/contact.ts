@@ -11,7 +11,7 @@ export class Contact {
         return this.name + ' (' + this.number + ')';
     }
 
-    public static fromJSON(json): Contact {
+    public static from(json): Contact {
         return new Contact(json.name, json.number);
     }
 }
