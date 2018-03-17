@@ -4,13 +4,16 @@ import * as io from "socket.io";
 import * as path from "path";
 import { Contact } from "../model/Contact";
 import { SmsMessage } from '../model/smsmessage';
+import { Logger } from './logger';
+import { ClientPair } from './client_pair';
 
-class App {
+class app {
 
     private express;
     private io:SocketIO.Server;
-
     public http;
+
+    private clients:Map<string,ClientPair> = new Map();
 
     constructor() {
         this.express = express();
@@ -19,38 +22,27 @@ class App {
         this.mountRoutes();
         this.mountSockets();
     }
+
     mountRoutes() {
         this.express.use(express.static('public'));
         this.express.get('/bundle.js', function(req:express.Request, res:express.Response) {
             res.sendFile(path.resolve('dist/bundle.js'));
         });
     }
+
     mountSockets() {
+        let app:app = this;
+
         this.io.on('connection', function (socket:SocketIO.Socket) {
-
-            let me:Contact = new Contact('Other Dude', '123-456-1234');
-            let miranda:Contact = new Contact('Miranda Montez', '123-456-5555');
-            let carl:Contact = new Contact('Carls Burg', '567-456-3455');
-
-            let mock_messages = [
-                'This is a test message, doofus',
-                '1234 test',
-                'Hi love!',
-                'Another test'
-            ];
-
-            socket.emit('auth_me', me);
-
-            console.log('user connected');
-            socket.on('sms_send', function (msg:string, receiver:string) {
-                // wrap self message in an SmsMessage
-                let recv:Contact = Contact.from(receiver);
-                let snt:SmsMessage = new SmsMessage(msg, me, recv, new Date());
-                socket.emit('sms_receive', snt);
-
-                // send a mock response
-                let snd:SmsMessage = new SmsMessage(mock_messages[(Math.random() * 3).toFixed(0)], recv, me, new Date());
-                socket.emit('sms_receive', snd);
+            Logger.log(socket, 'connected');
+            socket.on('join', function(type:string,roomId:string) {
+                if (type === 'web') {
+                    Logger.log(socket, 'identified as web client');
+                    app.mountWebClientSockets(socket, roomId);
+                } else if (type === 'android') {
+                    Logger.log(socket, 'identified as android client');
+                    app.mountAndroidClientSockets(socket, roomId);
+                }
             });
 
             socket.on('disconnect', function () {
@@ -58,6 +50,67 @@ class App {
             });
         });
     }
+
+    mountWebClientSockets(socket:SocketIO.Socket,roomId:string) {
+
+        console.log('socket: ' + socket.id + ', roomid: ' + roomId);
+        let clientPair:ClientPair;
+        let id = roomId;
+        if (id !== undefined) {
+            clientPair = this.clients.get(id);
+        } else {
+            id = socket.id.substr(0,6);
+        }
+        console.log('clientpair: ' + clientPair);
+        console.log('id: ' + id);
+        if (clientPair === undefined) {
+            clientPair = new ClientPair(id);
+            this.clients.set(id, clientPair);
+        }
+
+        clientPair.setWebSocket(socket);
+
+        socket.emit('room_id', clientPair.getId());
+
+        clientPair.onPhoneConnect(() => {
+            clientPair.getPhoneSocket().on('me', function(me) {
+                let m:Contact = Contact.from(me);
+                console.log('phone sent identity: ' + m.toString());
+                clientPair.setMe(m);
+                clientPair.getWebSocket().send('me', m);
+            });
+            clientPair.getPhoneSocket().on('receive_message', function(smsMessage) {
+                if (clientPair.isInitialized()) {
+                    console.log('phone sent message ');
+                    console.log(smsMessage);
+                    clientPair.getWebSocket().send('receive_message', smsMessage);
+                }
+            })
+            clientPair.getWebSocket().on('send_message', function(msg, receiver) {
+                if (clientPair.isInitialized()) {
+                    let sent = new SmsMessage(msg, clientPair.getMe(), Contact.from(receiver), new Date());
+                    console.log('web sent message');
+                    console.log(sent);
+                    clientPair.getPhoneSocket().send('send_message', msg);
+                }
+            });
+        });
+    }
+
+    mountAndroidClientSockets(socket:SocketIO.Socket,roomId:string) {
+
+        let clientPair:ClientPair;
+        if (roomId !== undefined) {
+            clientPair = this.clients.get(roomId);
+        }
+        if (clientPair === undefined) {
+            socket.emit('error', 'room ID not found on server');
+            socket.disconnect();
+            return;
+        }
+
+        clientPair.setPhoneSocket(socket);
+    }
 }
 
-exports.default = new App().http;
+exports.default = new app().http;

@@ -10,19 +10,26 @@ const socket = io('/');
 
 const messages:Map<string, Array<SmsMessage>> = new Map();
 const contacts:Map<string, Contact> = new Map();
-let selectedContact:Contact = new Contact('Carls Burg', '567-456-3455');
+let selectedContact:Contact;
 let me:Contact;
 
 socket.on('connect', function() {
-    console.log('connected');
+    socket.emit('join', 'web');
 });
 
-socket.on('auth_me', function(server_me) {
+socket.on('room_id', function(room_id:string) {
+    console.log('got room id: ' + room_id);
+    $('.header').text(room_id);
+})
+
+socket.on('me', function(server_me) {
     me = Contact.from(server_me);
     console.log('received identity: ' + me.toString());
 });
 
-socket.on('sms_receive', function(msg) {
+socket.on('receive_message', function(msg) {
+    console.log('received server message');
+    console.log(msg);
     handle_message(SmsMessage.from(msg));
 });
 
@@ -39,7 +46,7 @@ function send_message(text:string, receiver:Contact) {
     if (text === "null" || text.trim() === "") {
         return;
     }
-    socket.emit('sms_send', text, receiver);
+    socket.emit('send_message', text, receiver);
 }
 
 function append_message(msg:SmsMessage) {
@@ -81,6 +88,10 @@ function handle_message(msg:SmsMessage) {
     messages.get(contact.number).sort(function(a:SmsMessage,b:SmsMessage) {
         return a.date.getTime() - b.date.getTime();
     });
+
+    if (selectedContact === null) {
+        selectedContact = contact;
+    }
 
     if (selectedContact.number === contact.number) {
         append_message(msg);
