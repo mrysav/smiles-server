@@ -58,4 +58,8 @@ typings/
 .env
 
 # Typescript compiled files
-dist/
+build/
+
+# instapack distribution files
+wwwroot/js/
+wwwroot/css/

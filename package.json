@@ -3,15 +3,10 @@
   "version": "1.0.0",
   "description": "socket.io server for SMileS",
   "scripts": {
-    "clean": "rm -rf dist/*",
-    "app": "node dist/server/index.js",
-    "build-ts": "tsc",
-    "build-bundle": "npx webpack dist/app/index.js --module-bind 'css=style-loader!css-loader' --output dist/bundle.js",
-    "watch-ts": "tsc --watch | gsed -u 's/\\x1Bc//g'",
-    "watch-bundle": "npx webpack dist/app/index.js --watch --module-bind 'css=style-loader!css-loader' --output dist/bundle.js",
-    "start": "npm run build-ts && npm run build-bundle && npm run app",
-    "watch": "concurrently 'npm run watch-ts' 'npm run watch-bundle' 'npm run app'",
-    "mock-phone": "node dist/server/mock_phone.js"
+    "pack": "ipack",
+    "build": "tsc -p server/ --types node,express,socket.io",
+    "app": "node build/server/index.js",
+    "mock-phone": "node build/server/mock_phone.js"
   },
   "repository": {
     "type": "git",
@@ -21,22 +16,38 @@
   "license": "MIT",
   "dependencies": {
     "bootstrap": "^4.0.0",
-    "concurrently": "^3.5.1",
-    "express": "^4.16.2",
     "jquery": "^3.3.1",
     "popper.js": "^1.12.9",
+    "concurrently": "^3.5.1",
+    "es6-map": "^0.1.5",
+    "es6-promise": "^4.2.4",
+    "express": "^4.16.2",
+    "linq": "^3.0.9",
+    "luxon": "^1.0.0",
     "socket.io": "^2.0.4",
+    "tslib": "^1.9.0",
     "typescript": "^2.7.1"
   },
   "devDependencies": {
     "@types/express": "^4.11.1",
-    "@types/jquery": "^3.3.0",
+    "@types/luxon": "^0.5.0",
     "@types/node": "^8.9.1",
+    "@types/requirejs": "^2.1.31",
     "@types/socket.io": "^1.4.31",
     "@types/socket.io-client": "^1.4.32",
-    "css-loader": "^0.28.10",
-    "style-loader": "^0.20.2",
-    "webpack": "^4.1.1",
-    "webpack-cli": "^2.0.10"
+    "tslint": "^5.9.1"
+  },
+  "instapack": {
+    "output": "wwwroot",
+    "concat": {
+      "vendor": [
+        "es6-promise/dist/es6-promise.auto",
+        "jquery",
+        "popper.js",
+        "bootstrap",
+        "socket.io-client",
+        "es6-map"
+      ]
+    }
   }
 }

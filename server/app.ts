@@ -1,6 +1,6 @@
 import * as express from "express";
 import * as http from "http";
-import * as io from "socket.io";
+import * as SocketIO from "socket.io";
 import * as path from "path";
 import { Contact } from "../model/Contact";
 import { SmsMessage } from '../model/smsmessage';
@@ -18,16 +18,13 @@ class app {
     constructor() {
         this.express = express();
         this.http = new http.Server(this.express);
-        this.io = io(this.http);
+        this.io = SocketIO(this.http);
         this.mountRoutes();
         this.mountSockets();
     }
 
     mountRoutes() {
-        this.express.use(express.static('public'));
-        this.express.get('/bundle.js', function(req:express.Request, res:express.Response) {
-            res.sendFile(path.resolve('dist/bundle.js'));
-        });
+        this.express.use(express.static('wwwroot'));
     }
 
     mountSockets() {
@@ -61,12 +58,13 @@ class app {
         } else {
             id = socket.id.substr(0,6);
         }
-        console.log('clientpair: ' + clientPair);
         console.log('id: ' + id);
+
         if (clientPair === undefined) {
             clientPair = new ClientPair(id);
             this.clients.set(id, clientPair);
         }
+        console.log('clientpair: ' + clientPair);
 
         clientPair.setWebSocket(socket);
 
@@ -77,13 +75,13 @@ class app {
                 let m:Contact = Contact.from(me);
                 console.log('phone sent identity: ' + m.toString());
                 clientPair.setMe(m);
-                clientPair.getWebSocket().send('me', m);
+                clientPair.getWebSocket().emit('me', m);
             });
             clientPair.getPhoneSocket().on('receive_message', function(smsMessage) {
                 if (clientPair.isInitialized()) {
                     console.log('phone sent message ');
                     console.log(smsMessage);
-                    clientPair.getWebSocket().send('receive_message', smsMessage);
+                    clientPair.getWebSocket().emit('receive_message', smsMessage);
                 }
             })
             clientPair.getWebSocket().on('send_message', function(msg, receiver) {
@@ -91,7 +89,7 @@ class app {
                     let sent = new SmsMessage(msg, clientPair.getMe(), Contact.from(receiver), new Date());
                     console.log('web sent message');
                     console.log(sent);
-                    clientPair.getPhoneSocket().send('send_message', msg);
+                    clientPair.getPhoneSocket().emit('send_message', msg);
                 }
             });
         });

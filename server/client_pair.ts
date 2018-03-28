@@ -1,3 +1,4 @@
+import * as SocketIO from "socket.io";
 import { Contact } from '../model/contact';
 
 export class ClientPair {

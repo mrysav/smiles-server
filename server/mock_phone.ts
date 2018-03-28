@@ -24,11 +24,11 @@ let mock_messages = [
 ];
 
 function getRandomContact():Contact {
-    return mock_contacts[(Math.random() * mock_contacts.length).toFixed(0)];
+    return mock_contacts[(Math.random() * (mock_contacts.length - 1)).toFixed(0)];
 }
 
 function getRandomMessage(sender:Contact, receiver:Contact):SmsMessage {
-    let rndMsg:string = mock_messages[(Math.random() * mock_messages.length).toFixed(0)];
+    let rndMsg:string = mock_messages[(Math.random() * (mock_messages.length - 1)).toFixed(0)];
     return new SmsMessage(rndMsg, sender, receiver, new Date());
 }
 

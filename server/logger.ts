@@ -1,3 +1,5 @@
+import * as SocketIO from "socket.io";
+
 export class Logger {
     public static log(socket:SocketIO.Socket, message:string): void {
         console.log("socket " + this.makeid(socket) + ": " + message)
