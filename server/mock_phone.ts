@@ -33,9 +33,9 @@ function getRandomMessage(sender:Contact, receiver:Contact):SmsMessage {
 }
 
 socket.on('connect', function () {
-    console.log('connected to server');
+    console.log('Connected to server.');
 
-    rl.question('enter a room id ', (answer) => {
+    rl.question('Enter a room ID: ', (answer) => {
         rl.close();
         socket.emit('join', 'android', answer);
         socket.emit('me', me);
@@ -47,7 +47,7 @@ socket.on('connect', function () {
 
 socket.on('send_message', function(smsMessage) {
     let msg = SmsMessage.from(smsMessage);
-    console.log('message to send received: ' + msg.toString());
+    console.log('Message to send received: ' + msg.toString());
     socket.emit('receive_message', getRandomMessage(msg.sender, me));
 });
 

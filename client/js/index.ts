@@ -20,18 +20,14 @@ socket.on('connect', function() {
 });
 
 socket.on('room_id', function(room_id:string) {
-    console.log('got room id: ' + room_id);
     document.querySelector('.header').textContent = room_id;
 })
 
 socket.on('me', function(server_me) {
     me = Contact.from(server_me);
-    console.log('received identity: ' + me.toString());
 });
 
 socket.on('receive_message', function(msg) {
-    console.log('received server message');
-    console.log(msg);
     handle_message(SmsMessage.from(msg));
 });
 
@@ -66,8 +62,6 @@ function append_message(msg:SmsMessage) {
 }
 
 function handle_message(msg:SmsMessage) {
-    // console.log("received: " + msg.toString());
-
     let contact:Contact;
 
     if (msg.receiver.number === me.number) {
@@ -75,17 +69,14 @@ function handle_message(msg:SmsMessage) {
     } else if (msg.sender.number === me.number) {
         contact = msg.receiver;
     } else {
-        console.log('message does not appear to belong here: ' + msg.toString());
         return;
     }
-
-    console.log(contact);
 
     if (!messages.has(contact.number)) {
         messages.set(contact.number, new Array());
     }
 
-    if(!contacts.has(contact.number)) {
+    if(me.number !== contact.number && !contacts.has(contact.number)) {
         contacts.set(contact.number, Contact.from(contact));
     }
 
@@ -121,12 +112,46 @@ function update_contacts() {
 }
 
 function handleClickContact(e:MouseEvent) {
-    let contactCard = e.srcElement;
+    let contactCard = getParentOfClass(e.srcElement, 'contact');
     let number:string = contactCard.getAttribute('data-number');
+    if(number === null) {
+        return;
+    }
     let contactElms = document.querySelectorAll('.contact');
     for (let i = 0; i < contactElms.length; i++) {
         contactElms.item(i).classList.remove('selected');
     }
     contactCard.classList.add('selected');
     selectedContact = contacts.get(number);
+
+    update_messages();
+}
+
+function update_messages():void {
+    if(selectedContact === undefined) {
+        return;
+    }
+
+    let msgDiv:HTMLDivElement = document.querySelector('#messages');
+
+    let count = msgDiv.childElementCount;
+    for(let i = 0; i < count; i++) {
+        msgDiv.removeChild(msgDiv.children.item(0));
+    }
+
+    let selected_messages:Array<SmsMessage> = messages.get(selectedContact.number);
+
+    for(let i = 0; i < selected_messages.length; i++) {
+        append_message(selected_messages[i]);
+    }
+}
+
+function getParentOfClass(el:Element, cls:string):Element {
+    if(el === undefined) {
+        return undefined;
+    }
+    if(el.classList.contains(cls)) {
+        return el;
+    }
+    return getParentOfClass(el.parentElement, cls);
 }
